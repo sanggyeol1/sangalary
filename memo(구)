@@ -1,0 +1,581 @@
+[
+    기본세팅
+express라이브러리 설치하기
+
+1. npm init 하고 생성된 package.json에 "main": "server.js"
+2. npm install express 하면 package.json에 
+"dependencies": {
+    "express": "^4.18.2"
+  } 
+적힌다. : 현재 사용하고있는 express의 버젼을 알려줌
+
+
+server.js생성
+const express = require('express');
+const app = express();
+
+app.listen(8080, function() {
+    console.log('listening on 8080')
+})
+복붙 : 서버를 express로 만들기위한, 서버 오픈하기 위한 기본세팅
+
+node server.js 하면 서버 뜸(수정사항 있으면 서버껐다가 다시켜야함)
+npm install -g nodemon 쓰면 자동으로 껐다가 켜짐
+
+powershell을 관리자 권한으로 실행, 
+1. executionpolicy
+2. set-executionpolicy unrestricted 치고 Y
+
+그럼 nodemon server.js 로 서버 키고 수정사항 저장만 하면 알아서 서버 껐다 켜줌
+]
+
+[
+    웹 개발시 API : 웹서버와 고객 간의 소통방법(어떻게 해야 서버와 소통을 할수 있을까)
+
+app.get('/write', (요청, 응답)=>{
+    응답.sendFile(__dirname + '/write.html')
+}) 그냥 이런것들이 API임
+
+이런것들을 어떻게 짤지에 대한 규율 등이 rest api이다.
+REST API : rest원칙에 의해서 api를 짜면 코드가 restful 해진다.
+
+
+REST원칙 6개
+1. uniform interface : 간결하고 일관적(재일중요)
+ - 하나의 자료는 하나의 url로
+ - url 하나를 알면 둘을 알수 있어야 함(url이름을 보고 유추가 가능해야 함)
+ - 요청과 응답은 정보가 충분히 들어있어야 함
+
+이름짓기 원칙 : 
+ - url을 명사로 작성 추천, 
+ - 하위문서를 나타낼땐/, 
+ - 파일확장자 (.html)쓰지 않기
+ - 자료 하나당 하나의 url
+
+2. client와 서버의 역할구분
+ - 브라우저는 요청만
+ - 서버는 응답만
+
+3. stateless
+ - 요청1과 요청2는 의존성이 없어야 함
+
+4. cacheable
+ - 서버에서 보내주는 정보들은 캐싱이 가능해야 함(브라우저가 알아서 잘해줌)
+
+5. layered system 안중요
+6. code on demand 안중요
+]
+
+
+
+[
+    GET요청:
+    간단함 그냥 /주소 로 get 요청 보내면 응답.send로 보내주면 됨
+
+    app.get('/pet', (요청, 응답)=>{
+    응답.send('펫용품')
+})
+
+app.get('/', (요청, 응답)=>{
+    응답.sendFile(__dirname + '/index.html')
+})
+
+app.get('/write', (요청, 응답)=>{
+    응답.sendFile(__dirname + '/write.html')
+})
+
+]
+
+
+
+[
+    POST요청
+
+app.post('/add', (요청, 응답)=>{
+    응답.send('전송완료')
+    console.log(요청.body.title)
+    db에 저장
+})
+
+유저에게서 /add경로로 post요청을 받았을 때 받은 내용은 '요청'에 있다.
+이 '요청'을 사용하기 위해서는 
+
+1. body-parser가 필요하다.
+설치 : 
+app.use(express.urlencoded({extended: true})) 서버 위에 적으면 끝
+
+2. form 데이터의 경우 input 들에 name 쓰기
+
+]
+
+
+
+
+[
+    mongodb altas : nosql
+
+    DB 접속하는 URL 찾아오기
+
+server.js에서 DB에 접속하려면 접속 방법을 알아야겠죠? 
+
+
+1. 메인화면 셋팅이 끝나면 CONNECT라는 작은 흰색 버튼 누르기
+2. 가운데 Connect Your Application 버튼 누르기
+3. Choose your driver version 에서 Node.js 선택되어있는지 잘 확인하기
+4. (2) 밑에 접속 URL(Connection String) 긴게 뜨면 복사해서 일단 메모장 같은 곳에 저장해놓기
+
+끝. 이거 접속 URL만 잘 써주시면 이제 Node.js로 돌아가는 파일에서 여러분 DB와 직접 통신이 가능
+
+
+
+Server.js에서 DB접속하려면 
+
+1. 터미널 켜서 npm install mongodb@3.6.4 를 입력해서 라이브러리를 설치
+
+2. server.js 에 
+const MongoClient = require('mongodb').MongoClient;
+3. 하단에
+ var db
+ MongoClient.connect('아까 챙겨온 접속URL', function(에러, client){
+  if (에러) return console.log(에러);
+  db = client.db('todoapp');
+  app.listen('8080', function(){
+    console.log('listening on 8080')
+  });
+})
+
+nodemon server.js했을때 터미널에 listening on 8080뜨면 db연결이 된 것임
+
+
+]
+
+
+[
+    db에 데이터 저장하는법
+
+database는 폴더, 그 안에 collection이라는 이름의 파일이 저장된형태이다. _id는 부여해야하는데 내가 안쓰면 임의로 하나 부여함
+app.post('/add', (요청, 응답)=>{
+    
+    db.collection('post').insertOne({
+        title : 요청.body.title,
+        data : 요청.body.date
+    },(에러, 결과)=>{
+        console.log('저장완료')
+    })
+
+})이러한 형태로db에 데이터 꽂아넣기 가능하다.
+
+
+EJS : 서버데이터 집어넣어서 html만드는 라이브러리
+npm install ejs후
+server.js 에  app.set('view engine', 'ejs');
+
+list.html을 list.ejs로 바꿀 수 있다. (성능은 같음)
+<%= %> 안에 데이터 넣으면 됨  {}와 같은듯
+
+app.get('/list', function(요청, 응답){
+    응답.render('list.ejs');
+    db.collection('post').find().toArray((에러, 결과)=>{
+        console.log(결과)
+    });
+}) 이런식으로 보내줄 수 있음
+위 코드의 뜻 : db에 post라는 collection에 저장된 모든 데이터를 꺼내주세요
+
+서버에서 html말고 ejs쓰려면 views 폴더에 ejs파일을 몰아넣어야 한다.
+]
+
+
+[
+    게시물마다 그 고유의 _id를 가져야 한다.
+    _id : 0
+    _id : 1
+    _id : 2
+    인 글들이 있는데 여기서 2를 삭제하고 또 다른 글을 발행했을 때 그 글은 _id가 2가 되면 안된다. 각 글마다 고유의 id를 부여해야 한다.
+    그러기 위해서는 db에 id만을 관리하는 collection을 생성하는 것이 좋다.
+
+]
+
+[
+    서버에서 요청 응답해주는 법
+    응답.status(200) : 요청 성공
+    응답.status(400) : 고객 잘못 요청 실패 
+    응답.status(500) : 서버 이상 요청 실패
+    응답.status(400).send({message : '성공했습니다.'}) : 고객 잘못 요청 실패
+
+
+    url에 마지막 1231349187249이런 숫자는 글 번호이다.
+]
+
+
+[
+    회원인증방법
+1. session-based
+    쿠키
+
+2. 로그인 시 사용자에게 json웹 토큰을 발행해줌(암호화된 문자열)
+그럼 사용자는 토큰을 쿠키나 로컬스토리지에 저장함
+
+그 후 마이페이지에 접속하면 헤더에 토큰을 넣어서 토큰이 유효하면 마이페이지를 가져다 줌
+유저의 로그인 상태를 저장하지 않기 때문에 rest api에 적합하다.
+
+3. open authentication(OAuth)
+ - 구글의 프로필 정보를 가져옴
+ - 단점 : 구글이 없어지면 난감함
+
+]
+
+[
+    세션기능
+    npm install passport passport-local express-session
+
+    후 서버에
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+
+app.use(session({secret : '비밀코드', resave : true, saveUninitialized: false}));
+app.use(passport.initialize());
+app.use(passport.session()); 
+
+
+로그인창 만들고 서버에 
+
+app.post('/login', passport.authenticate('local',{
+    failureRedirect : '/fail'
+}), (요청, 응답)=>{
+  응답.redirect('/')
+})
+
+
+
+passport.use(new LocalStrategy({
+    usernameField: 'id',
+    passwordField: 'pw',
+    session: true,
+    passReqToCallback: false,
+  }, function (입력한아이디, 입력한비번, done) {
+    //console.log(입력한아이디, 입력한비번);
+    db.collection('login').findOne({ id: 입력한아이디 }, function (에러, 결과) {
+      if (에러) return done(에러)
+  
+      if (!결과) return done(null, false, { message: '존재하지않는 아이디요' })
+      if (입력한비번 == 결과.pw) {
+        return done(null, 결과)
+      } else {
+        return done(null, false, { message: '비번틀렸어요' })
+      }
+    })
+  }));
+
+  passport.serializeUser(function (user, done) {
+    done(null, user.id)
+  });//아이디를 이용해서 세션을 저장시키는 코드(로그인 성공시 발동)
+  
+  passport.deserializeUser(function (아이디, done) {
+    db.collection('login').findOne({ id: 아이디 }, function (에러, 결과) {
+      done(null, 결과)
+    })
+  });
+
+]
+
+
+
+[
+    보안을 위한 env
+
+    var db;
+MongoClient.connect('mongodb+srv://sanggyeol1:xpflgks4201@cluster0.4pltbdt.mongodb.net/?retryWrites=true&w=majority', function(에러, client){
+    if (에러) return console.log(에러);
+    
+    db = client.db('todoapp');
+
+    app.listen('8080', function(){
+      console.log('listening on 8080')
+    });
+  }) 서버에 이런부분에 내 아이디와 비밀번호가 있는게 좀 이상하기도 하고 다른 개발환경이 된다면 수정이 필요할 수 있다.
+
+-다른 컴퓨터에선 8070 포트를 연다든지,
+- 나중에 DB 이사를 가서 DB접속 문자열이 바뀐다든지
+- 아니면 내가 만든 코드를 팀원과 share 해야하는데 내 아이디 비번이 적혀있으면 좀 그렇잖습니까 
+이런 환경에 따라 가변적인 변수 데이터들을 보통 환경변수라고 부르는데 
+
+개발자들은 미래를 생각하는 코딩을 하기 위해 환경변수를 한곳에 모아서 관리 
+
+.env파일이라는 곳 
+.env파일에 모든 중요 환경변수들을 다 쑤셔박아넣은 뒤에,
+server.js에 가서 ".env파일에 있는 포트숫자를 여기에 넣어주세요~" 이런 식으로 코딩
+이 경우 server.js 파일이 털릴 경우에도 중요한 정보들은 env 파일에 있기 때문에 조그만한 보안상 이점도 있긴 있다. 
+구체적으로 어떻게 사용하는지 튜토리얼 들어갑니다. 
+
+1. 환경변수 사용을 위한 라이브러리 설치 npm install dotenv
+
+2. (server.js)에
+
+require('dotenv').config()
+
+3. server.js와 같은 경로에 .env 파일을생성
+
+4. server.js위에 원래 url과 포트번호가 있던 곳에 process.env.DB_URL 또는 process.env.PORT 이런식으로 작성하면된다.
+
+
+여러분이 나중에 AWS, Google, Naver 클라우드 등을 이용해서 서버를 발행할 때
+env파일을 똑같이 이용할 수 있습니다. 
+구글 클라우드 서비스에 올릴 경우 env 파일을 따로 만드는게 아니라 app.yaml 파일 내에 환경변수들을 포함해야하는데
+https://cloud.google.com/appengine/docs/standard/nodejs/config/appref#environment_variables
+이런 곳을 참고해서 똑같이 환경변수를 제작하면 되겠습니다. 
+다만 변수만드는 문법에 등호 대신 콜론 (:)을 씁니다.
+]
+
+
+
+[
+  검색기능 만들기
+
+일반적인 방법
+1. 검색버튼 누르면 서버에게 post요청
+2. 서버는 db에서 데이터를 꺼내줌
+하나찾을때 collection().findOne()
+많이찾을때 collection().find().toArray()
+그걸 ejs파일로 보내주면 될듯
+
+
+
+또다른 방법(query string)
+get요청으로 서버로 데이터 전달 가능(url에 넣어서)
+http://localhost:8080/list?데이터이름=데이터값
+
+window.location.replace('/url') 을 쓰면 현제페이지 url을 바꿀수 있다. 사실상 get요청이랑 동일하다.
+
+서버에서는 
+app.get('/search', (요청, 응답)=>{
+  console.log(요청.query)
+})으로 받아야 한다. 요청.query가 요청.body의 역할을 하는것
+
+중간1
+app.get('/search', (요청, 응답)=>{
+  console.log(요청.query)
+  db.collection('post').find({title : 요청.query.value}).toArray((에러, 결과)=>{
+    응답.render('list.ejs',{posts : 결과})
+  })
+})이러면 검색어와 완전히 일치하는 결과만 나온다.
+
+정규식 쓰면 해결(이 문자가 들어가있는지 검사하는것임) 근데 정규식을 쓰면 모든 데이터를 다 검색해야하기 때문에 너무 느려짐 그래서 indexing을 씀(binary search)
+
+index : 기존 collection을 정렬해놓은 사본
+index 만드는법 : 내가 원하는 collection을 찾아서 indexes를 찾아서 누르면 된다.
+ 
+index생성하고 fields에 "title": "text", 이런식으로 적으면 title이 가나다순으로 정렬되고 "_id" : 1, 이런식으로 하면 숫자순으로 indexing된다.
+여러가지 쓰면 여러가지 생성
+문자자료는 등록할때 한번에 등록해야 한다.(ex 제목과 작성자)
+
+중간2 : 
+app.get('/search', (요청, 응답)=>{
+  console.log(요청.query)
+  db.collection('post').find( { $text : { search : 요청.query.value } } ).toArray((에러, 결과)=>{
+    응답.render('search.ejs',{posts : 결과})
+  })
+})
+
+근데 mongodb는 띄어쓰기를 기준으로 단어를 규정하기 때문에 '코딩하기'에서 '코딩'을 검색하면 안나옴(영어친화적)
+
+해결법
+1. text index쓰지 말고 검색할 문서의 양을 제한두기
+2. text index만들때 다르게 만들기
+3. 한국어친화적으로 만들기 text index를 지우고
+search index쓰면됨 거기서 refine your index누르고 lucene.korean 설정하면 됨(을, 를 같은 조사 빼고 인덱싱)
+
+
+결론 : 
+app.get('/search', (요청, 응답)=>{
+  var 검색조건 = [
+    {
+      $search: {
+        index: 'titleSearch',
+        text: {
+          query: 요청.query.value,
+          path: 'title'  // 제목날짜 둘다 찾고 싶으면 ['제목', '날짜']
+        }
+      }
+    },
+    { $sort : { _id : -1 } }, 아이디순으로 정렬
+    { $limit : 10 }, 10개만
+    { $project : { 제목 : 1, _id : 0, score : { $meta : "searchScore" } } } 제목만가져오고 스코어 부여(정확도)
+  ] 
+  db.collection('post').aggregate(검색조건).toArray((에러, 결과)=>{
+    응답.render('search.ejs',{posts : 결과})
+  })
+})
+
+
+
+]
+
+[
+  회원가입기능:
+- 저장 전에 이미id가 있는지 먼저 찾아봐야 한다.
+- id가 알파벳 숫자만 잘 들어가있는지
+- 비번 저장 전에 암호화를 했는지?
+
+
+]
+  
+
+
+
+
+[
+router 폴더와 파일을 만들어api들 관리하기
+
+  매우 유사한 api들은 routes 폴더를 만들고 
+
+
+
+  var router = require('express').Router(); //npm 으로 설치했던 express라이브러리에 router기능을 쓰겠습니다.
+
+router.get('/shirts', (요청, 응답)=>{
+    응답.send('셔츠 파는 페이지입니다.')
+  })
+  
+router.get('/pants', (요청, 응답)=>{
+    응답.send('바지 파는 페이지입니다.')
+  })
+
+
+module.exports = router; 복붙하면라우팅이 된다.
+
+
+
+server.js에서는 
+
+app.use('/shop', require('./routes/shop.js')) 와 같은 미들웨어를 작성해주면 된다.
+
+
+특정 라우터파일에 미들웨어를 적용하고 싶다면? ex)로그인한 사람만 방문가능하게 
+ - 
+router.get('/shirts',로그인했니, (요청, 응답)=>{
+    응답.send('셔츠 파는 페이지입니다.')
+  })
+  
+router.get('/pants',로그인했니, (요청, 응답)=>{
+    응답.send('바지 파는 페이지입니다.')
+  })
+
+와 같이 미들웨어함수를 적용이 가능하다.
+
+
+
+파일 전체에 미들웨어를 적용하고 싶다면? : 
+router.use('/shirts', 로그인했니); 이런식으로 shirts전체에 미들웨어를 걸 수 있다.
+]
+
+
+
+[
+  이미지 업로드할때 폼
+  <form method="POST" action="/upload" enctype="multipart/form-data" >
+        <input type="file" name="프로필">
+        <button type="submit">전송</button>
+    </form>
+
+
+npm install multer : 파일 보내기 지원 라이브러리
+
+
+서버에서는 
+
+let multer = require('multer');
+var storage = multer.diskStorage({
+  destination : function(req, file, cb){
+    cb(null, './public/image')
+  },
+  filename : function(req, file, cb){
+    cb(null, file.originalname)
+  }
+});
+
+var upload = multer({storage : storage})
+
+app.get('/upload', (요청, 응답)=>{
+  응답.render('upload.ejs')
+})
+
+
+app.post('/upload', upload.single('프로필'), function(요청, 응답){
+  응답.send('업로드 완료')
+})여기서 single을 array로 바꾸고 형식 수정하며 이미지 여러개 업로드가 가능하다. (구글링하자)
+
+
+업로드한 이미지를 <img src="">에 넣어서 html상에서 보여주면 된다.
+<img src="/image/happy.png">을 모든 파일에서 쓸 수 있게 됨
+]
+
+
+
+[
+  채팅기능 == (댓글기능+실시간)
+  글번호가 4인글을 부모로 가지고있는 글들만 불러와라
+
+  1. 채팅하기 버튼누르면 채팅방 게시물 발행하고 
+  2. 거기에 댓글(메세지) 남길 수 있게 하면 개발 끝임
+
+
+유저의 _id를 ObjectId형식으로 저장하고싶으면
+const { ObjectId } = require('mongodb'); 이런식으로 사용하면 된다.
+ ObjectId()함수를 쓰면 된다.
+
+
+db의 collection안, array자료 안의 데이터를 찾을때도 
+.find({ member : req.user._id })  이런식으로 똑같이 하면 찾아진다.
+
+
+채팅기능은 댓글과 유사하다.
+메세지 전송버튼을 누르면 이 또한 글 발행이며 부모 게시물도 담아서 전송해야 한다.
+{
+  부모게시물_id(프론트)
+  발행자_id(서버 가능)
+  채팅내용(프론트)
+  date(서버 가능)
+}
+db에 데이터 전송할 때 프론트에서의 전송은 최소화하는것이 좋다.(조작이 가능하기 때문)그래서 서버에서 보낼 수 있는것들은 최대한 서버에서 보내자
+
+
+카톡같은 경우 채팅방을 클릭하면 메세지를 보낼 수 있다.
+]
+
+
+[
+  채팅기능에서 실시간으로 db데이터 계속 가져오는 법
+  ; 1. get요청 계속 날리기(유저많아지면 부담됨)(짧은시간에 get요청 여러번하면 그게 ddos공격)
+
+  2. 서버와 유저간 실시간 소통채널 열기(SSE)
+  일반get post요청은 1회 요청시 1회 응답만 가능한데 아래의 코드를 작성하면 여러번 응답이 가능하다.
+app.get('/message/:parentid', 로그인했니, function(요청, 응답){
+
+  응답.writeHead(200, {
+    "Connection": "keep-alive",
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+  });
+
+  응답.write('event: test\n');
+  응답.write('data: 안녕하세요\n\n');
+
+});
+
+헤더란?
+서버와 유저가 get, post http 요청으로 정보를 주고 받을 때 부가정보도 몰래 전달됩니다. 
+유저의 경우 사용하는 브라우저, OS, 쓰는 언어, 보유한 쿠키 등
+이런 것을 get요청시 서버로 몰래 전달합니다.
+반대로 서버도 응답시 유저에게 몰래 서버정보를 전달합니다. 
+이 정보를 보관하는 곳은 Header 라고 부릅니다.
+
+유저 -> 서버 이렇게 전달되는 Header는 Request Header,
+서버 -> 유저 이렇게 전달되는 Header는 Response Header라고 합니다. 
+Header가 어떻게 생겼는지 보고싶으면 크롬 개발자도구 Network 탭가면 됩니다. 
+
+
+
+채팅기능에서 채팅을 쏘면 db에 저장은 되는데 프론트엔드 상으로 업데이트가 안됨 -> change Stream 설정을해놓으면 db변동시에 서버에 알려주고 서버가 유저에게 변동사항을 쏴줄 수 있음 
+
+]
